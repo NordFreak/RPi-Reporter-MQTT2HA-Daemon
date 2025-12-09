@@ -100,7 +100,7 @@ def print_line(text, error=False, warning=False, info=False, verbose=False, debu
 
 def clean_identifier(name):
     clean = name.strip()
-    for this, that in [[' ', '-'], ['ä', 'ae'], ['Ä', 'Ae'], ['ö', 'oe'], ['Ö', 'Oe'], ['ü', 'ue'], ['Ü', 'Ue'], ['ß', 'ss']]:
+    for this, that in [[' ', '-'], ['Ã¤', 'ae'], ['Ã„', 'Ae'], ['Ã¶', 'oe'], ['Ã–', 'Oe'], ['Ã¼', 'ue'], ['Ãœ', 'Ue'], ['ÃŸ', 'ss']]:
         clean = clean.replace(this, that)
     clean = unidecode(clean)
     return clean
@@ -392,8 +392,8 @@ if apt_available == False:
 
 # Time for network transfer calculation
 previous_time = time.time()
-# NEU: Lüftergeschwindigkeit
-rpi_fan_speed = 0 # speichert die aktuelle Lüftergeschwindigkeit in RPM
+# NEU: LÃ¼ftergeschwindigkeit
+rpi_fan_speed = 0 # speichert die aktuelle LÃ¼ftergeschwindigkeit in RPM
 # END NEU
 # -----------------------------------------------------------------------------
 # -----------------------------------------------------------------------------
@@ -802,7 +802,7 @@ def getNetworkIFs():
     if ip_cmd != '':
         getNetworkIFsUsingIP(ip_cmd)
     else:
-        out = subprocess.Popen('/sbin/ifconfig | /bin/egrep "Link|flags|inet |ether " | /bin/egrep -v -i "lo:|loopback|inet6|\:\:1|127\.0\.0\.1"',
+        out = subprocess.Popen(r'/sbin/ifconfig | /bin/egrep "Link|flags|inet |ether " | /bin/egrep -v -i "lo:|loopback|inet6|\:\:1|127\.0\.0\.1"',
                                shell=True,
                                stdout=subprocess.PIPE,
                                stderr=subprocess.STDOUT)
@@ -853,7 +853,7 @@ def getFileSystemDrives():
     # FAILING Case v1.4.0:
     # Here is the output of 'df -m'
 
-    # Sys. de fichiers blocs de 1M Utilisé Disponible Uti% Monté sur
+    # Sys. de fichiers blocs de 1M UtilisÃ© Disponible Uti% MontÃ© sur
     # /dev/root 119774 41519 73358 37% /
     # devtmpfs 1570 0 1570 0% /dev
     # tmpfs 1699 0 1699 0% /dev/shm
@@ -1119,12 +1119,12 @@ def interpretThrottleValue(throttleValue):
     print_line('interpResult=[{}]'.format(interpResult), debug=True)
     return interpResult
 
-# NEU: Funktion zum Auslesen der Lüftergeschwindigkeit (RPM)
+# NEU: Funktion zum Auslesen der LÃ¼ftergeschwindigkeit (RPM)
 def getFanSpeed():
     global rpi_fan_speed
     rpi_fan_speed = 0  # Standardwert
 
-    # Verwende die bestätigte, flexible Methode zum Auslesen des fan1_input Pfades
+    # Verwende die bestÃ¤tigte, flexible Methode zum Auslesen des fan1_input Pfades
     try:
         # Finde den Pfad dynamisch
         fan_path = glob.glob('/sys/class/hwmon/hwmon*/fan1_input')
@@ -1324,7 +1324,7 @@ mqtt_client.will_set(lwt_command_topic, payload=lwt_offline_val, retain=True)
 if config['MQTT'].getboolean('tls', False):
     # According to the docs, setting PROTOCOL_SSLv23 "Selects the highest protocol version
     # that both the client and server support. Despite the name, this option can select
-    # “TLS” protocols as well as “SSL”" - so this seems like a resonable default
+    # â€œTLSâ€ protocols as well as â€œSSLâ€" - so this seems like a resonable default
     mqtt_client.tls_set(
         ca_certs=config['MQTT'].get('tls_ca_cert', None),
         keyfile=config['MQTT'].get('tls_keyfile', None),
@@ -1384,7 +1384,7 @@ K_LD_FS_USED = "disk_used"
 K_LD_PAYLOAD_NAME = "info"
 K_LD_CPU_USE = "cpu_load"
 K_LD_MEM_USED = "mem_used"
-# NEU: Lüftergeschwindigkeit Konstante für MQTT Discovery
+# NEU: LÃ¼ftergeschwindigkeit Konstante fÃ¼r MQTT Discovery
 K_LD_FAN_SPEED = "fan_speed_rpm"
 # END NEU
 
@@ -1426,7 +1426,7 @@ detectorValues = OrderedDict([
         topic_category="sensor",
         device_class="temperature",
         no_title_prefix="yes",
-        unit="°C",
+        unit="Â°C",
         state_class="measurement",
         icon='mdi:thermometer',
         json_value="temperature_c",
@@ -1458,19 +1458,15 @@ detectorValues = OrderedDict([
         state_class="measurement",
         icon='mdi:memory'
     )),
-# NEU: Home Assistant Auto-Discovery für Lüftergeschwindigkeit
+# NEU: Home Assistant Auto-Discovery fÃ¼r LÃ¼ftergeschwindigkeit
     (K_LD_FAN_SPEED, dict(
         title="RPi Fan Speed {}".format(rpi_hostname),
         topic_category="sensor",
-#        device_class="fan",
         no_title_prefix="yes",
         unit="RPM",
         state_class="measurement",
-    # NEU: Füge den state_topic (stat_t) hinzu
-#        stat_t='{}/{}'.format(sensor_base_topic, K_LD_FAN_SPEED),
         icon='mdi:fan',
-#        json_value=K_LD_FAN_SPEED, # Verwendet die neue Konstante K_RPI_FAN_SPEED
-        value_template='{{ value_json.info.fan_speed_rpm | default(0) }}',
+        json_value=K_LD_FAN_SPEED
     ))
     # END NEU
 ])
@@ -1522,7 +1518,7 @@ for [sensor, params] in detectorValues.items():
     if 'json_value' in params:
         payload['stat_t'] = values_topic_rel
         payload['val_tpl'] = "{{{{ value_json.{}.{} }}}}".format(K_LD_PAYLOAD_NAME, params['json_value'])
-    # NEU: Diese Zeile fügt den State Topic für Sensoren ein, die einzelne Werte senden (z.B. Fan Speed)
+    # NEU: Diese Zeile fÃ¼gt den State Topic fÃ¼r Sensoren ein, die einzelne Werte senden (z.B. Fan Speed)
     elif params.get('topic_category') == 'sensor':
         payload['stat_t'] = '{}/{}'.format(sensor_base_topic, sensor)
     if 'command' in params:
@@ -1660,7 +1656,7 @@ K_RPI_CPU_LOAD15 = "load_15min_prcnt"
 # list of throttle status
 K_RPI_THROTTLE = "throttle"
 
-# NEU: Lüftergeschwindigkeit Konstante für JSON-Payload
+# NEU: LÃ¼ftergeschwindigkeit Konstante fÃ¼r JSON-Payload
 K_RPI_FAN_SPEED = "fan_speed_rpm"
 # END NEU
 
@@ -1719,7 +1715,7 @@ def send_status(timestamp, nothing):
     if len(rpi_throttle_status) > 0:
         rpiData[K_RPI_THROTTLE] = rpi_throttle_status
 
-# NEU: Lüftergeschwindigkeit zum Payload hinzufügen
+# NEU: LÃ¼ftergeschwindigkeit zum Payload hinzufÃ¼gen
     rpiData[K_RPI_FAN_SPEED] = rpi_fan_speed 
 # END NEU
 
@@ -1851,7 +1847,7 @@ def update_values():
     getFileSystemDrives()
     getSystemTemperature()
     getSystemThermalStatus()
-    getFanSpeed() # <-- NEU: Lüftergeschwindigkeit auslesen
+    getFanSpeed() # <-- NEU: LÃ¼ftergeschwindigkeit auslesen
     getLastUpdateDate()
     getDeviceMemory()
     getNetworkIFs()
